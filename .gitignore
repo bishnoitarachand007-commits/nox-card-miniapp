@@ -1,0 +1,11 @@
+config.py
+*.db
+*.db-*
+*.backup
+*.bak
+__pycache__/
+*.pyc
+.env
+
+*.session
+*.backup*
