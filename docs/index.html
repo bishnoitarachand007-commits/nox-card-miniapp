@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NOX Card Game</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: Arial, sans-serif;
+      background: var(--tg-theme-bg-color, #111827);
+      color: var(--tg-theme-text-color, #ffffff);
+      text-align: center;
+    }
+    .panel {
+      max-width: 420px;
+      margin: 40px auto;
+      padding: 24px;
+      border-radius: 18px;
+      background: var(--tg-theme-secondary-bg-color, #1f2937);
+    }
+    h1 { color: #eab308; }
+    #status { line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <main class="panel">
+    <h1>♠ NOX CARD GAME ♥</h1>
+    <p id="status">Connecting to Telegram...</p>
+  </main>
+  <script>
+    const tg = window.Telegram?.WebApp;
+    const status = document.getElementById("status");
+
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      status.textContent = "Telegram connected. Secure card loading will be enabled next.";
+    } else {
+      status.textContent = "Please open this page inside Telegram.";
+    }
+  </script>
+</body>
+</html>
