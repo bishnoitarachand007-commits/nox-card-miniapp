@@ -1,46 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>NOX Card Game</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    body {
-      margin: 0;
-      padding: 24px;
-      font-family: Arial, sans-serif;
-      background: var(--tg-theme-bg-color, #111827);
-      color: var(--tg-theme-text-color, #ffffff);
-      text-align: center;
-    }
-    .panel {
-      max-width: 420px;
-      margin: 40px auto;
-      padding: 24px;
-      border-radius: 18px;
-      background: var(--tg-theme-secondary-bg-color, #1f2937);
-    }
-    h1 { color: #eab308; }
-    #status { line-height: 1.6; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NOX Card Game</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+body{margin:0;padding:20px;font-family:Arial,sans-serif;background:var(--tg-theme-bg-color,#111827);color:var(--tg-theme-text-color,#fff);text-align:center}
+.panel{max-width:440px;margin:24px auto;padding:22px;border-radius:18px;background:var(--tg-theme-secondary-bg-color,#1f2937)}
+h1{color:#eab308}.cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}
+.card{padding:25px 8px;border:2px solid #d1a72c;border-radius:14px;background:white;color:#171717;font-size:25px;font-weight:bold}
+.card.red{color:#d11b32}.card:disabled{opacity:.5}
+#status{line-height:1.5}.back-button{margin-top:18px;padding:14px 22px;border:0;border-radius:12px;background:#d1a72c;color:#111827;font-size:16px;font-weight:bold;cursor:pointer}
+</style>
 </head>
 <body>
-  <main class="panel">
-    <h1>♠ NOX CARD GAME ♥</h1>
-    <p id="status">Connecting to Telegram...</p>
-  </main>
-  <script>
-    const tg = window.Telegram?.WebApp;
-    const status = document.getElementById("status");
+<main class="panel">
+<h1>♠ NOX CARD GAME ♥</h1>
+<p id="status">Connecting...</p>
+<div id="cards" class="cards"></div>
+</main>
+<script>
+const tg=window.Telegram?.WebApp;
+const statusBox=document.getElementById("status");
+const cardsBox=document.getElementById("cards");
+const API_BASE="https://carey-laptops-titten-informative.trycloudflare.com";
+let gameId=null,turnId=null,submitting=false;
 
-    if (tg) {
-      tg.ready();
-      tg.expand();
-      status.textContent = "Telegram connected. Secure card loading will be enabled next.";
-    } else {
-      status.textContent = "Please open this page inside Telegram.";
-    }
-  </script>
+function status(message){statusBox.textContent=message;}
+
+async function api(path,options={}){
+ const response=await fetch(API_BASE+path,{
+  ...options,
+  headers:{
+   "X-Telegram-Init-Data":tg.initData,
+   ...(options.headers||{})
+  }
+ });
+ const data=await response.json();
+ if(!response.ok)throw new Error(data.error||"Request failed");
+ return data;
+}
+
+function renderCards(cards){
+ cardsBox.replaceChildren();
+ cards.forEach((card,index)=>{
+  const button=document.createElement("button");
+  button.className="card"+(["♥","♦"].includes(card.suit)?" red":"");
+  button.textContent=card.rank+" "+card.suit;
+  button.addEventListener("click",()=>selectCard(index));
+  cardsBox.appendChild(button);
+ });
+}
+
+async function loadCards(){
+ try{
+  if(!tg||!tg.initData){status("Please open inside Telegram.");return;}
+  tg.ready();tg.expand();
+  gameId=tg.initDataUnsafe?.start_param;
+  if(!gameId||!/^\d+$/.test(String(gameId))){
+   status("Game ID missing. Open using the group button.");return;
+  }
+  status("Checking your turn...");
+  const data=await api("/api/cards?game_id="+encodeURIComponent(gameId));
+  turnId=data.turn_id;
+  renderCards(data.cards);
+  status("Your turn, "+data.player+". Select one card.");
+ }catch(error){status(error.message);}
+}
+
+async function selectCard(index){
+ if(submitting)return;
+ submitting=true;
+ [...cardsBox.children].forEach(button=>button.disabled=true);
+ status("Sending your selected card...");
+ try{
+  await api("/api/select",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({game_id:gameId,turn_id:turnId,card_index:index})
+  });
+  cardsBox.replaceChildren();
+  status("Card passed successfully! You can return to the group.");
+  const backButton=document.createElement("button");
+  backButton.className="back-button";
+  backButton.textContent="← Back to Group";
+  backButton.addEventListener("click",()=>tg?.close());
+  cardsBox.appendChild(backButton);
+ }catch(error){
+  status(error.message);
+  submitting=false;
+  [...cardsBox.children].forEach(button=>button.disabled=false);
+ }
+}
+
+loadCards();
+</script>
 </body>
 </html>
