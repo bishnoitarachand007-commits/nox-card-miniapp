@@ -11,7 +11,7 @@ body{margin:0;padding:20px;font-family:Arial,sans-serif;background:var(--tg-them
 h1{color:#eab308}.cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}
 .card{padding:25px 8px;border:2px solid #d1a72c;border-radius:14px;background:white;color:#171717;font-size:25px;font-weight:bold}
 .card.red{color:#d11b32}.card:disabled{opacity:.5}
-#status{line-height:1.5}
+#status{line-height:1.5}.back-button{margin-top:18px;padding:14px 22px;border:0;border-radius:12px;background:#d1a72c;color:#111827;font-size:16px;font-weight:bold;cursor:pointer}
 </style>
 </head>
 <body>
@@ -24,7 +24,7 @@ h1{color:#eab308}.cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;marg
 const tg=window.Telegram?.WebApp;
 const statusBox=document.getElementById("status");
 const cardsBox=document.getElementById("cards");
-const API_BASE="https://carey-laptops-titten-informative.trycloudflare.com";
+const API_BASE="https://headquarters-deposits-discounts-info.trycloudflare.com";
 let gameId=null,turnId=null,submitting=false;
 
 function status(message){statusBox.textContent=message;}
@@ -81,7 +81,12 @@ async function selectCard(index){
    body:JSON.stringify({game_id:gameId,turn_id:turnId,card_index:index})
   });
   cardsBox.replaceChildren();
-  status("Card passed successfully. Check the group for the next turn.");
+  status("Card passed successfully! You can return to the group.");
+  const backButton=document.createElement("button");
+  backButton.className="back-button";
+  backButton.textContent="← Back to Group";
+  backButton.addEventListener("click",()=>tg?.close());
+  cardsBox.appendChild(backButton);
  }catch(error){
   status(error.message);
   submitting=false;
